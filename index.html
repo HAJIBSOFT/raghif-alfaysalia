@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مطعم رغيف الفيصلية - القائمة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #f8f4f0;
+            --surface-color: #ffffff;
+            --primary-color: #d87525;
+            --primary-color-dark: #b85e1a;
+            --text-color-primary: #3d352e;
+            --text-color-secondary: #7a6a5d;
+            --accent-color: #28a745;
+            --border-color: #e0d5c1;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --font-family: 'Tajawal', sans-serif;
+        }
+
+        /* --- Loading Screen & General Styles --- */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #fff; display: flex; justify-content: center;
+            align-items: center; z-index: 9999; transition: opacity 0.7s ease-out, visibility 0.7s ease-out;
+        }
+        #loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #loading-screen img { max-width: 250px; animation: pulse 1.8s infinite ease-in-out; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-family); background-color: var(--bg-color);
+            color: var(--text-color-primary); line-height: 1.7; overflow-x: hidden;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .currency-symbol {
+            display: inline-block; width: 0.9em; height: 0.9em;
+            vertical-align: -0.1em; margin: 0 2px;
+            content: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Saudi_Riyal_Symbol.svg/800px-Saudi_Riyal_Symbol.svg.png');
+        }
+
+        /* --- Top Navbar --- */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
+            padding: 12px 20px; box-shadow: 0 2px 10px var(--shadow-color);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .navbar-brand { font-size: 1.8em; font-weight: 800; color: #b12128; text-decoration: none; }
+        .cart-toggle-button {
+            background: none; border: none; font-size: 1.6em; color: #b12128;
+            cursor: pointer; position: relative; padding: 8px; text-decoration: none;
+        }
+        .cart-count-badge {
+            position: absolute; top: 0px; right: 0px; background-color: var(--primary-color);
+            color: white; font-size: 0.6em; padding: 3px 7px; border-radius: 50%;
+            font-weight: 700; border: 2px solid white;
+        }
+        
+        /* --- Page Header & Content --- */
+        .page-header { text-align: center; margin: 40px 0; }
+        .page-header img { max-width: 300px; margin-bottom: 15px; }
+        .page-title { font-size: 2.8em; font-weight: 800; color:#b12128; }
+        .search-controls { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-container { position: relative; flex-grow: 1; }
+        #search-input { width: 100%; padding: 12px 20px 12px 45px; border: 1px solid var(--border-color); background: var(--surface-color); border-radius: 25px; font-family: var(--font-family); font-size: 1em; outline: none; box-shadow: 0 2px 8px var(--shadow-color); transition: border-color 0.3s, box-shadow 0.3s; }
+        #search-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(216, 117, 37, 0.2), 0 2px 8px var(--shadow-color); }
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #aaa; }
+        
+        /* --- View Toggle Button --- */
+        .view-toggle-btn {
+            background-color: var(--surface-color); color: var(--text-color-secondary);
+            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 25px;
+            cursor: pointer; font-size: 1.2em; transition: all 0.3s ease;
+            box-shadow: 0 2px 8px var(--shadow-color); flex-shrink: 0;
+        }
+        .view-toggle-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .view-toggle-btn.active-compact-view { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        .filters-container-wrapper { overflow-x: auto; padding-bottom: 10px; margin-bottom: 30px; }
+        .filters-container-wrapper::-webkit-scrollbar { height: 6px; }
+        .filters-container-wrapper::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+        .filters-container { display: flex; flex-wrap: nowrap; gap: 12px; padding: 5px 0; }
+        .filter-btn { background-color: rgba(255, 255, 255, 0.7); color: var(--text-color-secondary); border: 1px solid var(--border-color); padding: 10px 22px; border-radius: 22px; cursor: pointer; font-size: 1em; font-family: var(--font-family); font-weight: 500; transition: all 0.3s ease; white-space: nowrap; }
+        .filter-btn:hover { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color-dark); font-weight: 700; box-shadow: 0 2px 5px rgba(216, 117, 37, 0.3); }
+        .category-section { margin-bottom: 50px; }
+        .category-title { font-size: 2em; font-weight: 700; margin-bottom: 25px; text-align: right; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: inline-block; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .product-card { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 15px var(--shadow-color); transition: all 0.3s ease; display: flex; flex-direction: column; overflow: hidden; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+        .product-card img { width: 100%; height: 200px; object-fit: cover; transition: all 0.3s ease; }
+        .product-card:hover img { transform: scale(1.05); }
+        .product-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
+        .product-card h3 { margin: 0 0 5px 0; font-size: 1.25em; font-weight: 700; }
+        .product-description { font-size: 0.9em; color: var(--text-color-secondary); margin-bottom: 15px; min-height: 45px; transition: all 0.3s ease; }
+        .price-and-action { display: flex; justify-content: space-between; align-items: center; margin-top: auto; transition: all 0.3s ease; }
+        .product-card .price { font-size: 1.3em; font-weight: 800; color: #1e191a; }
+        .product-card .direct-add-btn { background-color: var(--primary-color); color: white; border: none; padding: 10px 18px; font-size: 0.95em; font-family: var(--font-family); font-weight: 500; border-radius: 8px; cursor: pointer; transition: background-color 0.3s, transform 0.2s; display: flex; align-items: center; gap: 8px; }
+        .product-card .direct-add-btn:hover { background-color: var(--primary-color-dark); transform: scale(1.05); }
+        .product-attributes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 0 0 10px; min-height: 22px; }
+        .attr-icon { display: inline-block; width: 22px; height: 22px; background-size: contain; background-repeat: no-repeat; background-position: center; position: relative; }
+        .attr-icon::after { content: attr(title); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: var(--text-color-primary); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; opacity: 0; visibility: hidden; z-index: 10; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; }
+        .attr-icon:hover::after { opacity: 1; visibility: visible; }
+        .attr-icon--salt { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEh0ULR_-qfH3jXKRAVLOhyEBz6iMMh9Om5zWuw2ApOSfRPBgxRyDM5ho6hCW18gu8lZGkrFS5Qt5PjTDq1JKiQldnIviLBGZTOJzS3lDk9oZjULYgxtL_N7CBieqX3W_xXPlZXasN9g-dYc5wWBtc_09tJXBwfDCw6Hx8gM6Xtz5wLUZ2XtukEJRVzpLQ6I"); }
+        .attr-icon--pepper { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEg0oX6tnFyk_-dfBr9Vh7IOZeH9PKh93414Nw1zsB7idRHoSvDhK7KdX61w6QMt0cfpZJrWHFFbxJoaCiyN1B9z5KxtYgBwP3PbnBdSzvHCJgM3THm5BUOD1Np1iAu7anVYEI-NQI94DPcH_ta2ZA5Ga0lq9nquQXvNfoyiYJpTwMf9qnNGTQnvyLDrkRx5"); }
+        .attr-icon--spicy { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEhNganEQwvnDVOpjznRnQqFv4m_VgajDdS7scUDFdsJFjR9oTJkZrG1xWWH-Ojdhh5zPZPZ2QxDG9Gw2DmNJl0KD9_HlhTIYsjhJcpJb_efoSsPPoBIM5ZD_GXUMXlHrB3pDH8GxqRPzzG5A273fy8XRSHT2MIDydFWfJq5_QG7KM2UGcuQCOH7tM3VYYHK"); }
+        .attr-icon--wheat { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEivRE0H0a-Azi_4gE7q4cYGb1N_oexjm6OfZJ7UxhnWtjLp9qF81MGoLHZXkZPTJA2XhVwcZu62DCnB3FmcolDGtg6b-Nvwx4zu-vcBMjodgq7u33YpMB8CawjyIAl0kNL4FF0u28QzxxJ61fsmPbc8_1yLIk3Kn4TiHI-vAu9_535UMN_YyfIV1eaM6pqm"); }
+        .attr-icon--milk { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEgETisjhlYtOYMh5MSlcKDP86n3zj7t5kHdvXhmmmByAqu-dFcNhYHIEJuTbZJanGQVUorWV4_w5KB1JqeoReLm4HONWChdtTG5koSA8OgfIKBL5mAbmBqnlF459y6mlqIigk2ghVLL9Gf6CpfH9s3XBg9VHyiJr_GBhn6UWKwGx3BlCKRk7mtFtfWQ2-lj"); }
+        .attr-icon--egg { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEgsDg7Vfj6VKKZT64bAsy9SQI6NwdCT0R5QS5REDIcESfqP7QDPUmVPy-kX8-btWiFjzKBOcpWq8v0R1P2THTD6TQDx_4WHLvEmjVrDAUVpx1s1LsW-L3A-a6Xo-QENBryfeZxmQdlyDXgEFQuPMGci27I7uCxiXbGr-dT3ksz8Fg6XZtPLIrBX63SpyQ9l"); }
+        .attr-icon--nuts { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEhK9JloKvsYuje0UIj_dMoJhJiIgMuAkKXlnlxbTLYQrRdpjQPR0osOCmGfVPS3drn3j5lGIReUYBPiaJpsbXY-NIH4rFwraEXafe--uDzz9VylHHX4CAgrWh2kLijzpMGKWe_JWL9GdKLdGda_mQWiBhM6AXN16BEacc3mxpHyvMJLg6ftaksMQPbUT0vg"); }
+        .attr-icon--peanut { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEjMGhMiRYtg67oQSdC3vzQbra3KEKELN1JMGAfhHqD7-WjW6wyj0dBQsB6kBEAvnKgYMDtD4gGny_JEZRItm89RN7DXmRd9_MYulukoB-06r3XIe5Aw83D7zc1Ozr3BibW7ATeA_K3TYXiklgGLhCRAVfkuKmakr9pohRj6rScWiPJd7uVkpgavPtCCyDsS"); }
+        .attr-icon--fish { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEgvzL0lv4dvOOnYHJYmlHAFmvKKB8biBXIV2OpyQBIwJ8Akendu1J9qvjUOe9A5h3TWP9-ZOw--hyXziRDGfYhKA2KFu142RhmIs_pEkycz1kcroAPFxiYuE09JDpZndKe20TdXVTTEHYIPcqga9SevOkVkUFN9LerrRtoYZ4KcAzZzF4fWYLQIRz0YkMRu"); }
+        .attr-icon--shellfish { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEhsrtwPjfrCvjd6LBn8QiM_mLuBh1LashDhPR5zKfRIusp68OACFChwrGLwGlXbqTRnAx8MtwiXZLbhitopsjQRuZvuO88uR4jcUHqmABqN8Opi5DhqmFHGrNTT_knv70yZdpPASbbXBH3ue0cUOnGj2O89ACQch7y3j5cJmTYN36Sut2WNOGl9_qGaNNfa"); }
+        .attr-icon--soy { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEhuk7XfzJjfrqRkVY7SR9sX9u5eoM7N0iYkcBHtr3os8d79U1K9pOqAebeEEPv1Ys09CMr2FyQrDkY_OCHpGtOzJiovLlP5FcM947LGlZXPoGb-uV-VZYMGEYoz2BEc9ahzajCalOGr6Z0WAdhz2LF6CeQb8GEGD-Gu3VUR_RQozACHk3D1KJKKSVbicfKf"); }
+        .attr-icon--sesame { background-image: url("https://blogger.googleusercontent.com/img/a/AVvXsEj5WRTqKm_NErM7KVOgFwOW823p2xtR_1Z6__rGAI49S2ZI4h0AS0giS63ohdFjQ5iv04KHNTn4aEY-HyKUObjxaRYEPo3nH1LDCIgN_EI2ZtIoGQXNupERPlcJweOCDq0l5UkJxm7wr-evdtV7q5pp9odYmfstNKbBfCw2P2XERJLRVq3hA0jo-88Na_KE"); }
+
+        /* --- Compact View Styles --- */
+        body.compact-view .products-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        body.compact-view .product-card img { height: 120px; }
+        body.compact-view .product-card h3 { font-size: 1.1em; }
+        body.compact-view .product-description { min-height: 20px; font-size: 0.8em; margin-bottom: 10px; }
+        body.compact-view .price-and-action { flex-direction: column; align-items: stretch; gap: 10px; }
+        body.compact-view .product-card .price { text-align: center; }
+
+        /* --- "About Us" Modal --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background-color: var(--surface-color); padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; animation: fadeInModal 0.3s ease-out; }
+        @keyframes fadeInModal { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 2.5em; color: #aaa; cursor: pointer; line-height: 1; }
+        .about-header { text-align: center; margin-bottom: 25px; }
+        .about-header img { max-width: 200px; margin-bottom: 10px; }
+        .about-header h2 { font-size: 2em; color: #b12128; }
+        .about-section { margin-bottom: 25px; }
+        .about-section h4 { font-size: 1.3em; color: var(--primary-color); margin-bottom: 15px; text-align: center; }
+        .about-socials { text-align: center; }
+        .about-socials a { color: var(--text-color-primary); font-size: 1.8em; margin: 0 12px; transition: color 0.3s, transform 0.2s; }
+        .about-socials a:hover { color: var(--primary-color); transform: translateY(-3px); }
+        .allergen-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .allergen-table td { padding: 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .allergen-table td:first-child { width: 40px; text-align: center; }
+        .about-footer { margin-top: 30px; text-align: center; font-size: 0.85em; color: var(--text-color-secondary); }
+        .about-footer p { margin-bottom: 5px; }
+
+        /* --- Notification Toast --- */
+        .notification-toast {
+            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+            background-color: var(--accent-color); color: white;
+            padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1003; transition: bottom 0.5s ease, opacity 0.5s ease;
+            display: flex; align-items: center; gap: 10px;
+            opacity: 0;
+        }
+        .notification-toast.show { bottom: 30px; opacity: 1; }
+
+        /* --- Mobile Bottom Navigation --- */
+        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--surface-color); box-shadow: 0 -2px 10px var(--shadow-color); z-index: 1001; }
+        .nav-list { display: flex; list-style: none; margin: 0; padding: 0; }
+        .nav-item { flex: 1; text-align: center; padding: 8px 0; text-decoration: none; color: var(--text-color-secondary); display: flex; flex-direction: column; align-items: center; gap: 4px; transition: color 0.2s; position: relative; }
+        .nav-item .cart-count-badge { right: calc(50% - 25px); top: 2px;}
+        .nav-item i { font-size: 1.4em; }
+        .nav-item span { font-size: 0.8em; font-weight: 500; }
+        .nav-item.active { color: var(--primary-color); }
+        
+        /* --- Media Queries --- */
+        @media (max-width: 768px) {
+            body { padding-bottom: 80px; }
+            .mobile-nav { display: block; }
+            .navbar .cart-toggle-button { display: none; }
+            .notification-toast.show { bottom: 80px; } 
+            body.compact-view .products-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGHYYhphUac3HG8T-OFi-5IZJMRRA9feFb0dbYZjPZY2gm7-GZzEoF61Nx1VLps5DB3tw17hM8UcrUT_Sxo631yxp4tOPZu8lCCVnpdiQ1n4i7EfUvpYK2KxYDKSX44XZhFH3_MmYwuoQGUUnB99DyWHj4cR4yjlvBSiZjqA4jWurYWFvhBaVv34Mnko6o/s1007/vydt.png" alt="جاري التحميل...">
+    </div>
+
+    <!-- About Us Modal -->
+    <div class="modal-overlay" id="about-us-modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="about-us-modal-close-btn">&times;</button>
+            <div class="about-header">
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGHYYhphUac3HG8T-OFi-5IZJMRRA9feFb0dbYZjPZY2gm7-GZzEoF61Nx1VLps5DB3tw17hM8UcrUT_Sxo631yxp4tOPZu8lCCVnpdiQ1n4i7EfUvpYK2KxYDKSX44XZhFH3_MmYwuoQGUUnB99DyWHj4cR4yjlvBSiZjqA4jWurYWFvhBaVv34Mnko6o/s1007/vydt.png" alt="شعار المطعم">
+                <h2>مطعم رغيف الفيصلية</h2>
+            </div>
+            <div class="about-section">
+                <h4>تواصل معنا</h4>
+                <div class="about-socials">
+                    <a href="#" aria-label="موقعنا على الخريطة"><i class="fas fa-map-marker-alt"></i></a>
+                    <a href="#" aria-label="تيك توك"><i class="fab fa-tiktok"></i></a>
+                    <a href="#" aria-label="إنستغرام"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="about-section">
+        
+                <h4>متواجدون على تطبيقات التوصيل</h4>
+				 <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjZHdKJrgvtAEGmRX-6gfd6I5sAsQ8SmO_Qf2mfhOTc0tEz0HkGpHQIcX8Sn5knPVlP2AW0O7QEdEkdKjGcuLgdB3Rt8WvT5Ix9sMuMg240gtY4RpB_K6kwoty5_92OOjTLKC6N2VPnvDL5TvNZWXbeerfsBbNoPNcvWv9ixkE8S6eFaK9bML1iIcvL5YG8/s314/HAJIB%20SOFT%200510012621.png" alt="HAJIB SOFT 0510012621" class="footer-logo-img">
+                    <!-- Rows will be generated by JavaScript -->
+                </table>
+            </div>
+            <div class="about-footer">
+                <p>يحتاج البالغون تقريباً إلى 2000 سعرة حرارية في المتوسط يوميا، وطبعاً قد تختلف الاحتياجات الفردية من السعرات الحرارية من شخص لآخر.</p>
+                <p>© <span id="current-year"></span> جميع الحقوق محفوظة لفريق حاجب سوفت.</p>
+				<p>-----------------------------------</p>
+					<p>                       </p>
+						<p>                       </p>
+				</div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">رغيف الفيصلية</a>
+        <a href="checkout.html" class="cart-toggle-button" aria-label="الذهاب إلى سلة التسوق">
+            <i class="fas fa-shopping-basket"></i>
+            <span class="cart-count-badge">0</span>
+        </a>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGHYYhphUac3HG8T-OFi-5IZJMRRA9feFb0dbYZjPZY2gm7-GZzEoF61Nx1VLps5DB3tw17hM8UcrUT_Sxo631yxp4tOPZu8lCCVnpdiQ1n4i7EfUvpYK2KxYDKSX44XZhFH3_MmYwuoQGUUnB99DyWHj4cR4yjlvBSiZjqA4jWurYWFvhBaVv34Mnko6o/s1007/vydt.png" alt="شعار مطعم رغيف الفيصلية">
+            <h1 class="page-title">قائمة الطعام</h1>
+        </header>
+
+        <div class="search-controls">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" placeholder="ابحث عن وجبتك المفضلة...">
+            </div>
+            <button id="toggle-view-btn" class="view-toggle-btn" title="تغيير طريقة العرض">
+                <i class="fas fa-th-large"></i>
+            </button>
+        </div>
+        
+        <div class="filters-container-wrapper">
+            <div class="filters-container" id="filters-container"></div>
+        </div>
+
+        <div id="menu-sections"></div>
+    </div>
+    
+    <div class="notification-toast" id="notification-toast">
+        <i class="fas fa-check-circle"></i> <span id="notification-message"></span>
+    </div>
+
+    <nav class="mobile-nav">
+        <div class="nav-list">
+            <a href="#" class="nav-item active" id="nav-menu">
+                <i class="fas fa-utensils"></i>
+                <span>القائمة</span>
+            </a>
+            <a href="checkout.html" class="nav-item" id="nav-cart">
+                <i class="fas fa-shopping-basket"></i>
+                <span class="cart-count-badge">0</span>
+                <span>السلة</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-about">
+                <i class="fas fa-store"></i>
+                <span>من نحن</span>
+            </a>
+        </div>
+    </nav>
+    
+    <script>
+        const CART_STORAGE_KEY = 'ragheefAlFaisaliahCart_v2';
+        const COMPACT_VIEW_STORAGE_KEY = 'ragheefAlFaisaliahView_v1';
+
+        const productsData = [
+            { "id": "spicy-chicken-wings", "name": "أجنحة دجاج حارة", "category": "مقبلات", "description": "أجنحة دجاج مقلية ومغطاة بصلصة البافلو الحارة.", "basePrice": 25, "image": "https://images.unsplash.com/photo-1541592106381-b5863c292135?q=80&w=872&auto=format&fit=crop", "attributes": ["spicy", "salt", "wheat", "milk"] },
+            { "id": "cheesecake", "name": "تشيز كيك", "category": "حلويات", "description": "طبقة من البسكويت المقرمش تعلوها كريمة الجبن الغنية.", "basePrice": 18, "image": "https://images.unsplash.com/photo-1542826438-c2e288f54917?q=80&w=870&auto=format&fit=crop", "attributes": ["milk", "egg", "wheat", "nuts"] },
+            { "id": "grilled-salmon", "name": "سلمون مشوي", "category": "أطباق رئيسية", "description": "قطعة من سمك السلمون الطازج المشوي مع بهارات خفيفة.", "basePrice": 65, "image": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?q=80&w=870&auto=format&fit=crop", "attributes": ["fish", "salt", "pepper"] },
+            { "id": "hummus", "name": "حمص بالطحينة", "category": "مقبلات", "description": "حمص مهروس ممزوج بالطحينة وعصير الليمون.", "basePrice": 12, "image": "https://images.unsplash.com/photo-1629500411116-37a450209210?q=80&w=870&auto=format&fit=crop", "attributes": ["sesame", "salt"] },
+            { "id": "beef-burger", "name": "برجر لحم بالجبن", "category": "ساندويتشات", "description": "شريحة لحم بقري مشوي مع الجبن والخس في خبز البريوش.", "basePrice": 30, "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=999&auto=format&fit=crop", "attributes": ["wheat", "milk", "sesame", "egg"] },
+            { "id": "garden-salad", "name": "سلطة خضراء", "category": "مقبلات", "description": "تشكيلة من الخضروات الطازجة مع تتبيلة الليمون والزيت.", "basePrice": 15, "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=870&auto=format&fit=crop", "attributes": ["soy"] }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // --- DOM Elements ---
+                const loadingScreen = document.getElementById('loading-screen');
+                const menuSectionsContainer = document.getElementById('menu-sections');
+                const searchInput = document.getElementById('search-input');
+                const filtersContainer = document.getElementById('filters-container');
+                const notificationToast = document.getElementById('notification-toast');
+                const notificationMessage = document.getElementById('notification-message');
+                const aboutUsModal = document.getElementById('about-us-modal-overlay');
+                const aboutUsCloseBtn = document.getElementById('about-us-modal-close-btn');
+                const allergenTable = document.querySelector('.allergen-table');
+                const navMenuItems = document.querySelectorAll('.nav-item');
+                const navMenuTab = document.getElementById('nav-menu');
+                const navAboutTab = document.getElementById('nav-about');
+                const cartBadges = document.querySelectorAll('.cart-count-badge');
+                const toggleViewBtn = document.getElementById('toggle-view-btn');
+                document.getElementById('current-year').textContent = new Date().getFullYear();
+
+                // --- State ---
+                let cart = [];
+                let notificationTimeout;
+                let currentActiveFilter = 'all';
+                let currentSearchTerm = '';
+                let isCompactView = false;
+                const allergenInfo = { salt: 'يحتوي على ملح', pepper: 'يحتوي على فلفل', spicy: 'حار', wheat: 'يحتوي على قمح (جلوتين)', milk: 'يحتوي على حليب', egg: 'يحتوي على بيض', nuts: 'يحتوي على مكسرات', peanut: 'يحتوي على فول سوداني', fish: 'يحتوي على سمك', shellfish: 'يحتوي على محار', soy: 'يحتوي على فول الصويا', sesame: 'يحتوي على سمسم' };
+
+                // --- Functions ---
+                const saveCart = () => localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+                const loadCart = () => { cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]'); };
+                const saveViewPreference = () => localStorage.setItem(COMPACT_VIEW_STORAGE_KEY, isCompactView);
+
+                function loadViewPreference() {
+                    isCompactView = localStorage.getItem(COMPACT_VIEW_STORAGE_KEY) === 'true';
+                    document.body.classList.toggle('compact-view', isCompactView);
+                    toggleViewBtn.classList.toggle('active-compact-view', isCompactView);
+                    toggleViewBtn.innerHTML = isCompactView ? '<i class="fas fa-th-list"></i>' : '<i class="fas fa-th-large"></i>';
+                    toggleViewBtn.title = isCompactView ? "عرض عادي" : "عرض مضغوط";
+                }
+                
+                function updateCartBadge() {
+                    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                    cartBadges.forEach(badge => { badge.textContent = totalItems; });
+                }
+
+                function showNotification(message) {
+                    notificationMessage.textContent = message;
+                    notificationToast.classList.add('show');
+                    clearTimeout(notificationTimeout);
+                    notificationTimeout = setTimeout(() => {
+                        notificationToast.classList.remove('show');
+                    }, 3000);
+                }
+
+                window.addDirectToCart = function(productId) {
+                    const product = productsData.find(p => p.id === productId);
+                    const existingItem = cart.find(item => item.id === productId);
+                    if (existingItem) {
+                        existingItem.quantity++;
+                    } else {
+                        cart.push({ id: productId, name: product.name, quantity: 1 });
+                    }
+                    saveCart();
+                    updateCartBadge();
+                    showNotification(`تمت إضافة "${product.name}"`);
+                };
+                
+                function displayProducts() {
+                    menuSectionsContainer.innerHTML = '';
+                    const searchTermLower = currentSearchTerm.toLowerCase();
+                    const filteredProducts = productsData.filter(p => (currentActiveFilter === 'all' || p.category === currentActiveFilter) && (searchTermLower === '' || p.name.toLowerCase().includes(searchTermLower)));
+
+                    if (filteredProducts.length === 0) {
+                        menuSectionsContainer.innerHTML = `<p style="text-align:center; padding: 20px;">لا توجد منتجات تطابق بحثك.</p>`;
+                        return;
+                    }
+
+                    const productsByCategory = filteredProducts.reduce((acc, product) => {
+                        (acc[product.category] = acc[product.category] || []).push(product);
+                        return acc;
+                    }, {});
+
+                    const displayOrder = currentActiveFilter === 'all' ? [...new Set(productsData.map(p => p.category))] : [currentActiveFilter];
+
+                    displayOrder.forEach(category => {
+                        if (!productsByCategory[category]) return;
+                        const categorySection = document.createElement('div');
+                        categorySection.className = 'category-section';
+                        categorySection.innerHTML = `<h2 class="category-title">${category}</h2><div class="products-grid"></div>`;
+                        const productsGrid = categorySection.querySelector('.products-grid');
+                        
+                        productsByCategory[category].forEach(product => {
+                            let attributesHTML = '';
+                            if (product.attributes && product.attributes.length > 0) {
+                                attributesHTML = `<div class="product-attributes">${product.attributes.map(attr => `<span class="attr-icon attr-icon--${attr}" title="${allergenInfo[attr] || ''}"></span>`).join('')}</div>`;
+                            }
+                            productsGrid.innerHTML += `
+                                <div class="product-card">
+                                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                                    <div class="product-info">
+                                        <h3>${product.name}</h3>
+                                        ${attributesHTML}
+                                        <p class="product-description">${product.description || ''}</p>
+                                        <div class="price-and-action">
+                                            <button class="direct-add-btn" onclick="addDirectToCart('${product.id}')"><i class="fas fa-cart-plus"></i> إضافة</button>
+                                            <span class="price">${product.basePrice}<i class="currency-symbol"></i></span>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                        menuSectionsContainer.appendChild(categorySection);
+                    });
+                }
+
+                function displayFilterButtons() {
+                    const categories = ['all', ...new Set(productsData.map(p => p.category))];
+                    filtersContainer.innerHTML = categories.map(category => `<button class="filter-btn ${category === 'all' ? 'active' : ''}" data-category="${category}">${category === 'all' ? 'عرض الكل' : category}</button>`).join('');
+                    filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            currentActiveFilter = this.dataset.category;
+                            filtersContainer.querySelector('.active').classList.remove('active');
+                            this.classList.add('active');
+                            displayProducts();
+                        });
+                    });
+                }
+                
+                function populateAllergenTable() {
+                    let tableHTML = '';
+                    for (const key in allergenInfo) {
+                        tableHTML += `<tr><td><span class="attr-icon attr-icon--${key}"></span></td><td>${allergenInfo[key]}</td></tr>`;
+                    }
+                    allergenTable.innerHTML = tableHTML;
+                }
+
+                // --- Event Listeners and Modal Logic ---
+                const setActiveTab = (activeTab) => { navMenuItems.forEach(item => item.classList.remove('active')); activeTab.classList.add('active'); };
+                const openAboutModal = () => { aboutUsModal.classList.add('active'); document.body.style.overflow = 'hidden'; };
+                const closeAboutModal = () => { aboutUsModal.classList.remove('active'); document.body.style.overflow = ''; };
+
+                navAboutTab.addEventListener('click', (e) => { e.preventDefault(); setActiveTab(navAboutTab); openAboutModal(); });
+                navMenuTab.addEventListener('click', (e) => { e.preventDefault(); setActiveTab(navMenuTab); closeAboutModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+                aboutUsCloseBtn.addEventListener('click', () => { closeAboutModal(); setActiveTab(navMenuTab); });
+                aboutUsModal.addEventListener('click', (e) => { if (e.target === aboutUsModal) { closeAboutModal(); setActiveTab(navMenuTab); }});
+                searchInput.addEventListener('input', (e) => { currentSearchTerm = e.target.value; displayProducts(); });
+                toggleViewBtn.addEventListener('click', () => { isCompactView = !isCompactView; saveViewPreference(); loadViewPreference(); });
+
+                // --- Initial Load ---
+                loadCart();
+                loadViewPreference();
+                updateCartBadge();
+                displayFilterButtons();
+                displayProducts();
+                populateAllergenTable();
+
+                window.addEventListener('load', () => {
+                    setTimeout(() => { if (loadingScreen) loadingScreen.classList.add('hidden'); }, 500);
+                });
+
+            } catch (error) {
+                console.error("A critical error occurred:", error);
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) loadingScreen.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>```

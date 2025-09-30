@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مطعم صمام - إتمام الطلب</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+        :root {
+            --bg-color: #f5ba38;
+            --surface-color: #ffffff;
+            --primary-color: #d87525;
+            --primary-color-dark: #b85e1a;
+            --text-color-primary: #3d352e;
+            --text-color-secondary: #7a6a5d;
+            --border-color: #e0d5c1;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --font-family: 'Tajawal', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color-primary);
+            line-height: 1.7;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .currency-symbol {
+            display: inline-block;
+            width: 0.9em; height: 0.9em;
+            vertical-align: -0.1em; margin: 0 2px;
+            content: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Saudi_Riyal_Symbol.svg/800px-Saudi_Riyal_Symbol.svg.png');
+        }
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar-brand { font-size: 1.8em; font-weight: 800; color: var(--primary-color); text-decoration: none; }
+        .back-to-menu-btn {
+            color: var(--primary-color); text-decoration: none; font-weight: 500;
+            padding: 8px 15px; border: 1px solid var(--primary-color); border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .back-to-menu-btn:hover { background-color: var(--primary-color); color: white; }
+
+        .checkout-container {
+            background: #fffefb;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px var(--shadow-color);
+            margin-top: 40px;
+        }
+        .checkout-header h2 {
+            font-size: 2em; color: var(--primary-color);
+            font-weight: 800; text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .cart-items-list-container { max-height: 400px; overflow-y: auto; padding: 0 10px; margin-bottom: 20px;}
+        .cart-items-list { list-style-type: none; padding: 0; }
+        .cart-items-list li { padding: 15px 0; border-bottom: 1px dashed #ddd; display: flex; justify-content: space-between; align-items: flex-start; }
+        .cart-item-details { flex-grow: 1; margin-right: 15px; }
+        .cart-item-details .item-name { font-weight: 700; font-size: 1.1em; }
+        .cart-item-details .item-customizations { font-size: 0.85em; color: var(--text-color-secondary); margin-top: 5px; }
+        .cart-item-actions { text-align: left; }
+        .item-total-price { font-weight: bold; }
+        .remove-item-btn { background-color: #e74c3c !important; color: white; border: none; padding: 5px 10px !important; font-size: 0.8em !important; border-radius: 50%; cursor: pointer; margin-top: 5px; }
+        #empty-cart-message { text-align: center; color: var(--text-color-secondary); padding: 40px 20px; font-size: 1.1em; }
+
+        .checkout-footer { padding: 20px; border-top: 1px solid var(--border-color); background: #f9f4ec; border-radius: 0 0 12px 12px; margin: 0 -30px -30px; }
+        .delivery-options { margin-bottom: 15px; text-align: center; }
+        
+        #location-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px dashed var(--primary-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+        #get-location-btn {
+            background-color: #555;
+            color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer;
+            font-family: var(--font-family); font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        #get-location-btn:hover { background-color: #333; }
+        #get-location-btn.success { background-color: var(--primary-color); }
+        #location-feedback { margin-top: 10px; font-size: 0.9em; color: var(--text-color-secondary); }
+        #location-feedback a { color: var(--primary-color); font-weight: bold; }
+
+        .payment-options { margin-top: 20px; margin-bottom: 15px; text-align: center; }
+        .payment-options-title { display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-color-primary); }
+        .checkout-footer textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; min-height: 70px; font-family: var(--font-family); font-size: 1em; }
+        .summary-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1em; }
+        .summary-line.total { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-top: 10px; }
+        .cart-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .checkout-btn-whatsapp { width: 100%; background-color: #25D366; color: white; border: none; padding: 14px 20px; font-size: 1.1em; font-weight: 700; border-radius: 8px; transition: background-color 0.3s; cursor: pointer; }
+        .checkout-btn-whatsapp:hover { background-color: #1ebe58; }
+        .clear-cart-btn { width: 100%; background-color: #95a5a6; color: white; font-size: 0.9em; padding: 10px 15px; border-radius: 8px; cursor: pointer; border: none;}
+        
+        .notification-toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--primary-color); color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1003; transition: bottom 0.5s ease; font-size: 1em; }
+        .notification-toast.show { bottom: 30px; }
+
+        .map-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .map-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .map-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .map-modal-header h3 { color: var(--primary-color); font-size: 1.5em; }
+        .map-modal-close-btn { background: none; border: none; font-size: 2.5em; color: #aaa; cursor: pointer; line-height: 1; }
+        #map { height: 400px; width: 100%; border-radius: 8px; border: 1px solid var(--border-color); }
+        .map-modal-footer { text-align: center; margin-top: 15px; }
+        #confirm-location-btn {
+            background-color: var(--primary-color);
+            color: white; border: none; padding: 12px 30px;
+            font-family: var(--font-family); font-size: 1.1em;
+            border-radius: 8px; cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #confirm-location-btn:hover { background-color: var(--primary-color-dark); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">SAMAM RESTAURANT</a>
+        <a href="index.html" class="back-to-menu-btn">
+            <i class="fas fa-arrow-left"></i> 
+        </a>
+    </nav>
+    <div class="container">
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h2>طلباتك</h2>
+            </div>
+            <div class="cart-items-list-container">
+                <ul id="cart-items-list" class="cart-items-list"></ul>
+            </div>
+            <div class="checkout-footer" id="checkout-footer-section">
+                <div class="delivery-options">
+                    <label><input type="radio" name="deliveryType" value="pickup" checked> استلام من المطعم</label>
+                    <label><input type="radio" name="deliveryType" value="delivery"> توصيل</label>
+                </div>
+                <div id="location-section">
+                    <button id="get-location-btn">📍 حدد موقعك على الخريطة</button>
+                    <p id="location-feedback">لتوصيل طلبك، يرجى تحديد موقعك ضمن المنطقة الموضحة بالخريطة.</p>
+                </div>
+                <div class="payment-options">
+                    <span class="payment-options-title">اختر طريقة الدفع:</span>
+                    <label><input type="radio" name="paymentMethod" value="cash" checked> كاش</label>
+                    <label><input type="radio" name="paymentMethod" value="network"> شبكة (جهاز مدى)</label>
+                </div>
+                <textarea id="general-order-notes" placeholder="ملاحظات إضافية على الطلب"></textarea>
+                <div class="summary-line">
+                    <span>المجموع الفرعي (شامل الضريبة):</span>
+                    <span><span id="cart-subtotal-amount">0</span><i class="currency-symbol"></i></span>
+                </div>
+                <div class="summary-line" id="delivery-fee-line" style="display: none;">
+                    <span>رسوم التوصيل:</span>
+                    <span id="delivery-fee-amount">0</span>
+                </div>
+                <div class="summary-line total">
+                    <span>الإجمالي الكلي:</span>
+                    <span><span id="cart-grand-total-amount">0</span><i class="currency-symbol"></i></span>
+                </div>
+                <div class="cart-actions">
+                    <button class="checkout-btn-whatsapp" id="checkout-btn">
+                        <i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب
+                    </button>
+                    <button class="clear-cart-btn" id="clear-cart-btn">
+                        إفراغ السلة <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-modal-overlay" id="map-modal-overlay">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3>اختر موقع التوصيل</h3>
+                <button class="map-modal-close-btn" id="map-modal-close-btn">&times;</button>
+            </div>
+            <div id="map"></div>
+            <div class="map-modal-footer">
+                <button id="confirm-location-btn">تأكيد الموقع</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification-toast" id="notification-toast">
+        <i class="fas fa-check-circle"></i> <span id="notification-message"></span>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        const deliveryFee = 5;
+        const freeDeliveryThreshold = 25; // <--- قم بتعديل هذا السطر
+        const CART_STORAGE_KEY = 'restaurantAppCart_vFinalCompleteWithFooterFixed';
+        const whatsappNumber = "966539490701";
+
+        // --- NEW: Define Delivery Zone ---
+        // ** هام: قم بتغيير هذه الإحداثيات لتناسب منطقة التوصيل الخاصة بمطعمك **
+        // يمكنك الحصول على الإحداثيات من خرائط جوجل بالضغط كليك يمين على الخريطة
+        const deliveryZoneCoords = [
+            [24.77422898438242, 46.606192940246814],
+            [24.77105328406127, 46.59882227608286],
+            [24.762757976694807, 46.603205005427355],
+            [24.76599238436679, 46.61058644411116]
+        ];
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cartItemsListElement = document.getElementById('cart-items-list');
+            const cartSubtotalAmountElement = document.getElementById('cart-subtotal-amount');
+            const deliveryFeeLineElement = document.getElementById('delivery-fee-line');
+            const deliveryFeeAmountElement = document.getElementById('delivery-fee-amount');
+            const cartGrandTotalAmountElement = document.getElementById('cart-grand-total-amount');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            const notificationToast = document.getElementById('notification-toast');
+            const notificationMessage = document.getElementById('notification-message');
+            const generalOrderNotesTextarea = document.getElementById('general-order-notes');
+            const deliveryTypeRadios = document.querySelectorAll('input[name="deliveryType"]');
+            const checkoutFooterSection = document.getElementById('checkout-footer-section');
+            const locationSection = document.getElementById('location-section');
+            const getLocationBtn = document.getElementById('get-location-btn');
+            const locationFeedback = document.getElementById('location-feedback');
+            const mapModalOverlay = document.getElementById('map-modal-overlay');
+            const mapModalCloseBtn = document.getElementById('map-modal-close-btn');
+            const confirmLocationBtn = document.getElementById('confirm-location-btn');
+
+            let cart = [];
+            let currentDeliveryType = 'pickup';
+            let customerLocationLink = null;
+            let notificationTimeout;
+            let map, marker, deliveryPolygon;
+
+            const saveCartToLocalStorage = () => localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+            const loadCartFromLocalStorage = () => { cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]'); };
+
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notificationToast.classList.add('show');
+                clearTimeout(notificationTimeout);
+                notificationTimeout = setTimeout(() => notificationToast.classList.remove('show'), 3000);
+            }
+
+            function updateCartDisplay() {
+                cartItemsListElement.innerHTML = '';
+                let subtotal = 0;
+
+                if (cart.length === 0) {
+                    cartItemsListElement.innerHTML = `<li id="empty-cart-message">سلة الطلبات فارغة. <br><a href="index.html" style="color: var(--primary-color);">ابدأ التسوق الآن</a></li>`;
+                    checkoutFooterSection.style.display = 'none';
+                } else {
+                    checkoutFooterSection.style.display = 'block';
+                    cart.forEach((item, index) => {
+                        const listItem = document.createElement('li');
+                        const customizationsHTML = item.customizations.map(c => `<div>- ${c.text}</div>`).join('');
+                        listItem.innerHTML = `
+                            <div class="cart-item-details">
+                                <span class="item-name">${item.name} (×${item.quantity})</span>
+                                ${customizationsHTML ? `<div class="item-customizations">${customizationsHTML}</div>` : ''}
+                            </div>
+                            <div class="cart-item-actions">
+                                <span class="item-total-price">${(item.finalPricePerItem * item.quantity).toFixed(2)}<i class="currency-symbol"></i></span>
+                                <button class="remove-item-btn" onclick="removeFromCart(${index})"><i class="fas fa-times"></i></button>
+                            </div>`;
+                        cartItemsListElement.appendChild(listItem);
+                        subtotal += item.finalPricePerItem * item.quantity;
+                    });
+                }
+                cartSubtotalAmountElement.textContent = subtotal.toFixed(2);
+                
+                const isDelivery = currentDeliveryType === 'delivery';
+                locationSection.style.display = isDelivery ? 'block' : 'none';
+
+                const isEligibleForFreeDelivery = subtotal >= freeDeliveryThreshold;
+                let deliveryFeeValue = 0;
+                let deliveryFeeText = "0";
+
+                if (isDelivery && subtotal > 0) {
+                    if (isEligibleForFreeDelivery) {
+                        deliveryFeeValue = 0;
+                        deliveryFeeText = 'مجاني';
+                    } else {
+                        deliveryFeeValue = deliveryFee;
+                        deliveryFeeText = deliveryFee.toFixed(2);
+                    }
+                    deliveryFeeLineElement.style.display = 'flex';
+                    deliveryFeeAmountElement.innerHTML = `${deliveryFeeText}${deliveryFeeText !== 'مجاني' ? '<i class="currency-symbol"></i>' : ''}`;
+                } else {
+                    deliveryFeeLineElement.style.display = 'none';
+                }
+                
+                cartGrandTotalAmountElement.textContent = (subtotal + deliveryFeeValue).toFixed(2);
+            }
+
+            window.removeFromCart = function(index) {
+                cart.splice(index, 1);
+                updateCartDisplay();
+                saveCartToLocalStorage();
+            }
+
+            function clearCartAndNotify() {
+                cart = [];
+                generalOrderNotesTextarea.value = '';
+                deliveryTypeRadios[0].checked = true;
+                currentDeliveryType = 'pickup';
+                customerLocationLink = null;
+                updateCartDisplay();
+                saveCartToLocalStorage();
+                showNotification("تم إرسال طلبك بنجاح! تم إفراغ السلة.");
+            }
+
+            checkoutBtn.onclick = function() {
+                if (cart.length === 0) { return alert("سلة الطلبات فارغة!"); }
+                if (currentDeliveryType === 'delivery' && !customerLocationLink) {
+                    alert("الرجاء تحديد موقعك على الخريطة لإتمام طلب التوصيل.");
+                    return;
+                }
+                let message = "طلب جديد من مطعم صمام:\n\n", total = 0;
+                cart.forEach(item => {
+                    message += `*${item.name}* (الكمية: ${item.quantity})\n`;
+                    if(item.customizations.length > 0){ item.customizations.forEach(c => { message += `  - ${c.text}\n`; }); }
+                    const itemTotal = item.finalPricePerItem * item.quantity;
+                    message += `  *السعر:* ${itemTotal.toFixed(2)} ر.س\n\n`;
+                    total += itemTotal;
+                });
+                message += "--------------------\n";
+                message += `*المجموع:* ${total.toFixed(2)} ر.س\n`;
+                if (currentDeliveryType === 'delivery') {
+                    if (total >= freeDeliveryThreshold) {
+                        message += `*رسوم التوصيل:* مجاني\n`;
+                    } else {
+                        total += deliveryFee;
+                        message += `*رسوم التوصيل:* ${deliveryFee.toFixed(2)} ر.س\n`;
+                    }
+                }
+                message += `*الإجمالي الكلي:* ${total.toFixed(2)} ر.س\n\n`;
+                message += `*نوع الطلب:* ${currentDeliveryType === 'delivery' ? 'توصيل' : 'استلام من المطعم'}\n`;
+                if (currentDeliveryType === 'delivery' && customerLocationLink) {
+                    message += `*موقع التوصيل:* ${customerLocationLink}\n`;
+                }
+                message += `*طريقة الدفع:* ${document.querySelector('input[name="paymentMethod"]:checked').parentElement.textContent.trim()}\n`;
+                if(generalOrderNotesTextarea.value.trim()) { message += `*ملاحظات:* ${generalOrderNotesTextarea.value.trim()}\n`; }
+                window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                setTimeout(clearCartAndNotify, 1000);
+            };
+
+            clearCartBtn.onclick = () => { if (confirm("هل أنت متأكد من إفراغ السلة؟")) { cart = []; updateCartDisplay(); saveCartToLocalStorage(); } };
+            
+            deliveryTypeRadios.forEach(r => { 
+                r.onchange = (e) => { 
+                    currentDeliveryType = e.target.value; 
+                    if (currentDeliveryType !== 'delivery') customerLocationLink = null;
+                    updateCartDisplay(); 
+                }; 
+            });
+
+            // --- New Point in Polygon Check Function ---
+            function isMarkerInsidePolygon(markerLatLng, polyCoords) {
+                const x = markerLatLng.lat, y = markerLatLng.lng;
+                let inside = false;
+                for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+                    const xi = polyCoords[i][0], yi = polyCoords[i][1];
+                    const xj = polyCoords[j][0], yj = polyCoords[j][1];
+                    const intersect = ((yi > y) != (yj > y))
+                        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                return inside;
+            }
+
+            function initMap() {
+                if (map) {
+                    map.invalidateSize();
+                    map.fitBounds(deliveryZoneCoords); // Recenter map on the zone
+                    return;
+                }
+                
+                map = L.map('map');
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                // Draw delivery zone polygon
+                deliveryPolygon = L.polygon(deliveryZoneCoords, {
+                    color: '#d87525',
+                    fillColor: '#f5ba38',
+                    fillOpacity: 0.3
+                }).addTo(map);
+
+                // Fit map to the delivery zone
+                map.fitBounds(deliveryPolygon.getBounds());
+
+                // Add marker to the center of the zone
+                marker = L.marker(deliveryPolygon.getBounds().getCenter(), {draggable: true}).addTo(map);
+                
+                map.on('click', (e) => marker.setLatLng(e.latlng));
+            }
+
+            function openMapModal() {
+                mapModalOverlay.style.display = 'flex';
+                setTimeout(initMap, 10);
+            }
+
+            function closeMapModal() {
+                mapModalOverlay.style.display = 'none';
+            }
+
+            getLocationBtn.onclick = openMapModal;
+            mapModalCloseBtn.onclick = closeMapModal;
+            
+            confirmLocationBtn.onclick = () => {
+                const coords = marker.getLatLng();
+                
+                // --- VALIDATION STEP ---
+                if (!isMarkerInsidePolygon(coords, deliveryZoneCoords)) {
+                    alert("عفواً، الموقع الذي اخترته يقع خارج نطاق التوصيل المتاح حالياً. الرجاء اختيار موقع داخل المنطقة المحددة باللون البرتقالي.");
+                    return; // Stop the function here
+                }
+
+                const { lat, lng } = coords;
+                customerLocationLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                
+                locationFeedback.innerHTML = `✅ تم تحديد الموقع بنجاح. <a href="${customerLocationLink}" target="_blank">عرض موقع التوصيل</a>`;
+                getLocationBtn.textContent = "📍 تم تحديد الموقع";
+                getLocationBtn.classList.add('success');
+
+                closeMapModal();
+            };
+
+            // Initial Load
+            loadCartFromLocalStorage();
+            updateCartDisplay();
+        });
+    </script>
+</body>
+</html>
