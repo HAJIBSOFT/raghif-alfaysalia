@@ -1,0 +1,43 @@
+[
+  {
+    "id": "spicy-chicken-wings",
+    "name": "أجنحة دجاج حارة",
+    "category": "مقبلات",
+    "description": "أجنحة دجاج مقلية ومغطاة بصلصة البافلو الحارة.",
+    "basePrice": 25,
+    "image": "https://images.unsplash.com/photo-1541592106381-b5863c292135?q=80&w=872&auto=format&fit=crop",
+    "attributes": ["spicy", "salt", "wheat", "milk"],
+    "customizations": []
+  },
+  {
+    "id": "beef-burger",
+    "name": "برجر لحم بالجبن",
+    "category": "ساندويتشات",
+    "description": "شريحة لحم بقري مشوي مع الجبن والخس في خبز البريوش.",
+    "basePrice": 30,
+    "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=999&auto=format&fit=crop",
+    "attributes": ["wheat", "milk", "sesame", "egg"],
+    "customizations": [
+      {
+        "groupName": "الحجم",
+        "type": "radio",
+        "name": "size_beef",
+        "required": true,
+        "options": [
+          { "text": "عادي", "value": "regular", "price": 0 },
+          { "text": "دبل", "value": "double", "price": 10 }
+        ]
+      },
+      {
+        "groupName": "إضافات",
+        "type": "checkbox",
+        "name": "addons_beef",
+        "required": false,
+        "options": [
+          { "text": "جبنة إضافية", "value": "extra_cheese", "price": 3 },
+          { "text": "هلابينو", "value": "jalapeno", "price": 2 }
+        ]
+      }
+    ]
+  }
+]
